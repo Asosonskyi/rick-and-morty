@@ -19,7 +19,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({ initialSearchTerm = ''
 
   useEffect(() => {
     if (searchTerm) {
-      navigate(`/?search=${encodeURIComponent(searchTerm)}`, { replace: true });
+      navigate(`/?name=${encodeURIComponent(searchTerm)}`, { replace: true });
     }
   }, [searchTerm, navigate]);
 

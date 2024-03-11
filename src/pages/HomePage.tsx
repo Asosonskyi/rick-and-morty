@@ -23,84 +23,76 @@ export default function HomePage() {
   const [itemsPerPage] = useState<number>(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [prevPageUrl, setPrevPageUrl] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   const location = useLocation();
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await axios(`https://rickandmortyapi.com/api/character/?name=${searchQuery}&page=${currentPage}`);
+  const fetchData = async (url: string) => {
+    try {
+      const response = await axios.get(url);
+      setError('')
       setCharacters(response.data.results);
       setTotalRecords(response.data.info.count);
       setTotalPages(response.data.info.pages);
-    };
-
-    if (searchQuery.length >= 2) {
-      fetchData();
-    } else {
-      setCharacters([]);
+      setNextPageUrl(response.data.info.next || null);
+      setPrevPageUrl(response.data.info.prev || null);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError('An error occurred while fetching data.');
     }
+  };
+
+  useEffect(() => {
+    if(!searchQuery)return
+    const initialUrl = `https://rickandmortyapi.com/api/character/?page=${currentPage}&name=${searchQuery}`;
+    fetchData(initialUrl);
   }, [searchQuery, currentPage]);
+
 
 useEffect(() => {
   const searchParams = new URLSearchParams(location.search);
-  const pageFromURL = searchParams.get("page") ?? '';
-  const searchTermFromURL = searchParams.get("search");
-  
-  setSearchQuery(searchTermFromURL || '');
-  const page = parseInt(pageFromURL, 10);
-  setCurrentPage(!isNaN(page) ? page : 1);
+  const search = searchParams.get('name') || '';
+  const page = searchParams.get('page') || '1';
+
+  setSearchQuery(search);
+  setCurrentPage(parseInt(page, 10));
 }, [location.search]);
 
-  useEffect(() => {
-  if (!searchQuery) return;
-  const fetchData = async () => {
-    const result = await axios(`https://rickandmortyapi.com/api/character/?name=${searchQuery}&page=${currentPage}`);
-    if (result.data.results) {
-      setCharacters(result.data.results);
-    } else {
-      setCharacters([]);
-    }
-  };
-
-  if (searchQuery.length >= 2 || currentPage) {
-    fetchData();
-  } else {
-    setCharacters([]);
-  }
-}, [searchQuery, currentPage]);
-
-  const lastItemIndex = currentPage * itemsPerPage;
-  const firstItemIndex = lastItemIndex - itemsPerPage;
-  const currentItems = characters.slice(firstItemIndex, lastItemIndex);
-
-
-  const paginate = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    const currentSearchParams = new URLSearchParams(location.search);
-    if (searchQuery) {
-      currentSearchParams.set("search", searchQuery);
-    }
-    currentSearchParams.set("page", pageNumber.toString());
-    navigate(`/?${currentSearchParams.toString()}`, { replace: true });
-  };
-
   const resetSearch = () => {
+    setCharacters([])
     setSearchQuery('');
     setCurrentPage(1);
     navigate('/');
   };
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+      <SearchInput onSearch={setSearchQuery} resetSearch={resetSearch} />
+      {error}
+    </div>
+    )
+  }
 
   return (
     <div className="container mx-auto p-4">
       <SearchInput onSearch={setSearchQuery} resetSearch={resetSearch} />
       {
         characters.length !== 0 &&
-        <CharactersTable characters={currentItems} />
+        <CharactersTable characters={characters} />
       }
       {
         characters.length !== 0 &&
-        <Pagination totalPages={totalPages} paginate={paginate} currentPage={currentPage} />
+        <Pagination 
+          totalPages={totalPages}
+          currentPage={currentPage}
+          nextPage={nextPageUrl} 
+          prevPage={prevPageUrl} 
+          onNavigate={fetchData} 
+        />
       }
     </div>
   );

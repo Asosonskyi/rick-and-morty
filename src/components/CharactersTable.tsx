@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Character {
   id: number;
@@ -13,8 +13,11 @@ interface CharactersTableProps {
   characters: Character[];
 }
 
-export const CharactersTable: React.FC<CharactersTableProps> = ({ characters }) => {
+export const CharactersTable: React.FC<CharactersTableProps> = ({characters}) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  
   return (
     <div className="my-4 overflow-x-auto">
       <table className="w-full table-auto">
@@ -28,7 +31,7 @@ export const CharactersTable: React.FC<CharactersTableProps> = ({ characters }) 
         </thead>
         <tbody className="text-center">
           {characters.map((character) => (
-            <tr key={character.id} onClick={() => navigate(`/character/${character.id}`)} className="cursor-pointer">
+            <tr key={character.id} onClick={() => navigate(`/character/${character.id}`, { state: { search: location.search } })} className="cursor-pointer">
               <td className="border px-1 py-1">{character.name}</td>
               <td className="border px-1 py-1">{character.status}</td>
               <td className="border px-1 py-1">{character.species}</td>

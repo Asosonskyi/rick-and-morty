@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 interface Character {
@@ -16,7 +16,10 @@ interface Character {
 const CharacterPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [character, setCharacter] = useState<Character | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const { search} = location.state || {};
 
   useEffect(() => {
     const fetchCharacter = async () => {
@@ -32,7 +35,7 @@ const CharacterPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4 flex flex-col gap-8 items-center">
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/${search}`)}
         className="mb-4 px-4 py-2 w-24 bg-blue-500 text-white font-bold rounded hover:bg-blue-700 transition duration-300"
       >
         Go Back
